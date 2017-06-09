@@ -27,8 +27,6 @@ def importFromURI(uri):
    """
    mod = None
    mname = os.path.basename(uri)
-   print uri
-   print mname
 
    if os.path.exists(uri+'.pyc'):
       try:
@@ -83,8 +81,8 @@ class Helper_Manager(object):
       #helper_module,helper_method = helper_module_arg.split(".")
       self.logger.info("importing helper module [%s]..." % helper_module_arg)
       
-      klass = self.import_class("helpers/service_discovery_helper.Helper")
-      print klass
+      klass = self.import_class(helper_module_arg)
+      my_instance = klass()
       #import_class("helpers/service_discovery_helper.Helper")
 
       
@@ -144,12 +142,13 @@ class Helper_Manager(object):
       
       # import module
       helper_module_imported = importFromURI(module_full_path)
-      print helper_module_imported
-      
-      #print cl
-      #d = cl.rfind(".")
-      #classname = cl[d+1:len(cl)]
-      #m = __import__(cl[0:d], globals(), locals(), [classname])
+ 
+      # and import class
+      my_class = getattr(helper_module_imported, class_name)
+      return my_class
+      #d = class_name.rfind(".")
+      #classname = class_name[d+1:len(class_name)]
+      #m = __import__(class_name[0:d], globals(), locals(), [classname])
       #return getattr(m, classname)
 
 
