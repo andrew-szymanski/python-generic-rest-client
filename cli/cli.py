@@ -9,6 +9,8 @@ import sys
 import logging
 import os
 import inspect
+import imp
+
 # import helpers.cdh_aws_helper
 
 
@@ -18,6 +20,28 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s %(message)s',"%Y-%m-
 console.setFormatter(formatter)
 logging.getLogger(__name__).addHandler(console)
 logger = logging.getLogger(__name__)
+
+def importFromURI(uri, absl):
+   """ import helper
+   """
+   mod = None
+   if not absl:
+      uri = os.path.normpath(os.path.join(os.path.dirname(__file__), uri))
+   path, fname = os.path.split(uri)
+   mname, ext = os.path.splitext(fname)
+
+   if os.path.exists(os.path.join(path,mname)+'.pyc'):
+      try:
+            return imp.load_compiled(mname, uri)
+      except:
+            pass
+   if os.path.exists(os.path.join(path,mname)+'.py'):
+      try:
+            return imp.load_source(mname, uri)
+      except:
+            pass
+
+   return mod
 
 
 class Helper_Manager(object):
@@ -48,8 +72,14 @@ class Helper_Manager(object):
 
 
         # read in configuration file
-        self.logger.info("reading in configuration file...")
         config_file = kwargs.get('cfg', None)
+        self.logger.info("reading in configuration file [%s]..." % config_file)
+        
+        # import specified helper module
+        helper_module = kwargs.get('exec')
+        self.logger.info("importing helper module [%s]..." % helper_module)
+        
+        
         
         # Composite Cloudera Helper_Manager API / AWS boto helper
         #self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
@@ -124,6 +154,7 @@ def main(argv=None):
     cat_options = OptionGroup(parser, "options")
     cat_options.add_option("-d", "--debug", help="debug logging, specify any value to enable debug, omit this param to disable, example: --debug=False", default=False)
     cat_options.add_option("-c", "--cfg", help="configuration required by helper, KEY=VALUE format, example: -c $HOME/configs/service_discovery.cfg", default=None)
+    cat_options.add_option("-x", "--exec", help="execute helper command, in format 'helpers.my_helper.my_method.  Method must always take only json file as argument / input", default="NOT_SPECIFIED")
     parser.add_option_group(cat_options)
 
     try: 
