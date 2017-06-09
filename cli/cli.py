@@ -9,7 +9,7 @@ import sys
 import logging
 import os
 import inspect
-import helpers.cdh_aws_helper
+# import helpers.cdh_aws_helper
 
 
 LOG_INDENT = "  "
@@ -36,7 +36,7 @@ class Manager(object):
         
         # initialize all vars to avoid "undeclared"
         # and to have a nice neat list of all member vars
-        self.cdh_aws_helper = None
+        # self.cdh_aws_helper = None
         
 
 
@@ -49,12 +49,12 @@ class Manager(object):
 
         # read Cloudera Manager config / credential file
         self.logger.info("configuring CDH/AWS composite helper...")
-        cdh_config_file = kwargs.get('cfg', None)
+        config_file = kwargs.get('cfg', None)
         
         # Composite Cloudera Manager API / AWS boto helper
         self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
         try:
-            self.cdh_aws_helper.configure(cfg=cdh_config_file)
+            self.cdh_aws_helper.configure(cfg=config_file)
         except Exception, e:
             raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
         
@@ -107,23 +107,24 @@ def mainRun(opts, parser):
     logger.debug("creating CLI object...") 
     cdh_aws_manager = Manager(logger=logger)
     logger.debug("setting up Manager...") 
-    try:
-        cdh_aws_manager.configure(**opts.__dict__)
-    except Exception, e:
-        logger.error("%s" % e)
-        parser.print_help()
-        sys.exit(1)
+
+    #try:
+        #cdh_aws_manager.configure(**opts.__dict__)
+    #except Exception, e:
+        #logger.error("%s" % e)
+        #parser.print_help()
+        #sys.exit(1)
     
-    # and load composite data (CDH and AWS combined)
-    logger.debug("loading composite CHD/AWS data...") 
-    cdh_aws_manager.reload_composite_data()    
+    ## and load composite data (CDH and AWS combined)
+    #logger.debug("loading composite CHD/AWS data...") 
+    #cdh_aws_manager.reload_composite_data()    
     
-    # list instances
-    composite_instances = cdh_aws_manager.get_instances()
+    ## list instances
+    #composite_instances = cdh_aws_manager.get_instances()
     
-    for k,instance in composite_instances.iteritems():
-        #print instance.aws_instance.__dict__
-        pass
+    #for k,instance in composite_instances.iteritems():
+        ##print instance.aws_instance.__dict__
+        #pass
     
     
     
@@ -144,13 +145,13 @@ def main(argv=None):
     logger.debug("main starting...")
 
     argv = argv or sys.argv
-    parser = OptionParser(description="Cloudera Manager on AWS management tools",
+    parser = OptionParser(description="python extendable REST client (based on restkit)",
                       version=__version__,
                       usage="usage: %prog [options]")
     # cat options
     cat_options = OptionGroup(parser, "options")
     cat_options.add_option("-d", "--debug", help="debug logging, specify any value to enable debug, omit this param to disable, example: --debug=False", default=False)
-    cat_options.add_option("-c", "--cfg", help="Config for CDH Manager API, boto and everything else, KEY=VALUE format, example: -c $HOME/.passwords/cdh_aws_manager.config", default=None)
+    cat_options.add_option("-c", "--cfg", help="configuration required by helper, KEY=VALUE format, example: -c $HOME/configs/service_discovery.cfg", default=None)
     parser.add_option_group(cat_options)
 
     try: 
