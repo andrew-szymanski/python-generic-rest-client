@@ -45,10 +45,21 @@ def importFromURI(uri, absl):
    return mod
 
 def import_class(cl):
-    d = cl.rfind(".")
-    classname = cl[d+1:len(cl)]
-    m = __import__(cl[0:d], globals(), locals(), [classname])
-    return getattr(m, classname)
+   """ dot notation for relative
+   """
+   
+   # get root dir of this app
+   this_module_fullpath = os.path.realpath(__file__)
+   this_module_dir = os.path.dirname(this_module_fullpath)
+   this_project_dir = os.path.dirname(this_module_dir)
+   print this_project_dir
+   
+   
+   
+   #d = cl.rfind(".")
+   #classname = cl[d+1:len(cl)]
+   #m = __import__(cl[0:d], globals(), locals(), [classname])
+   #return getattr(m, classname)
  
 
 class Helper_Manager(object):
@@ -88,16 +99,21 @@ class Helper_Manager(object):
         #helper_module,helper_method = helper_module_arg.split(".")
         self.logger.info("importing helper module [%s]..." % helper_module_arg)
         
+        import_class("a")
+        #import_class("helpers/service_discovery_helper.Helper")
  
         
         #import helpers.boto_helper
         # klass = import_class(helper_module_arg)
 
         # helper_module_imported = importFromURI("/home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper", True)
-        helper_module_imported = imp.load_source("service_discovery_helper", "/home/madpole/data/code/github/python-generic-rest-client/helpers/service_discovery_helper.py")
-        print helper_module_imported
-        #my_class = getattr(helper_module_imported, 'BotoHelperEC2')
+        
+        
+        #helper_module_imported = imp.load_source("service_discovery_helper", "/home/madpole/data/code/github/python-generic-rest-client/helpers/service_discovery_helper.py")
+        #print helper_module_imported
+        #my_class = getattr(helper_module_imported, 'Helper')
         #my_instance = my_class()
+        #print my_instance
         
  
         

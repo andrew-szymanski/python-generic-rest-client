@@ -32,6 +32,7 @@ class Helper(object):
         self.logger.debug("%s: %s version [%s]" % (self.__class__.__name__, inspect.getfile(inspect.currentframe()),__version__))
         # initialize variables - so all are listed here for convenience
         #self.api = None
+        print "   ---- blah"
         
 
 
