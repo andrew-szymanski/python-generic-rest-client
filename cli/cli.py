@@ -76,8 +76,10 @@ class Helper_Manager(object):
         self.logger.info("reading in configuration file [%s]..." % config_file)
         
         # import specified helper module
-        helper_module = kwargs.get('exec')
+        helper_module_arg = kwargs.get('exec')
+        helper_module,helper_method = helper_module_arg.split(".")
         self.logger.info("importing helper module [%s]..." % helper_module)
+        helper = importFromURI(helper_module, False)
         
         
         
