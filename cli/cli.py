@@ -78,10 +78,13 @@ class Helper_Manager(object):
       
       # import specified helper module
       helper_module_arg = kwargs.get('exec')
-      #helper_module,helper_method = helper_module_arg.split(".")
-      self.logger.info("importing helper module [%s]..." % helper_module_arg)
+ 
+      # split method from module.class
+      helper_class,helper_method = helper_module_arg.rsplit(".",1)
+      self.logger.debug("importing class: [%s], method: [%s]" % (helper_class,helper_method))
+
       
-      klass = self.import_class(helper_module_arg)
+      klass = self.import_class(helper_class)
       my_instance = klass()
       #import_class("helpers/service_discovery_helper.Helper")
 
