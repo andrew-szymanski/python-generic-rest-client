@@ -20,7 +20,7 @@ logging.getLogger(__name__).addHandler(console)
 logger = logging.getLogger(__name__)
 
 
-class Manager(object):
+class Helper_Manager(object):
     """ Main class which does the whole workflow
     """
     def __init__(self, *args, **kwargs):
@@ -47,50 +47,35 @@ class Manager(object):
         self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3])) 
 
 
-        # read Cloudera Manager config / credential file
-        self.logger.info("configuring CDH/AWS composite helper...")
+        # read in configuration file
+        self.logger.info("reading in configuration file...")
         config_file = kwargs.get('cfg', None)
         
-        # Composite Cloudera Manager API / AWS boto helper
-        self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
-        try:
-            self.cdh_aws_helper.configure(cfg=config_file)
-        except Exception, e:
-            raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
+        # Composite Cloudera Helper_Manager API / AWS boto helper
+        #self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
+        #try:
+            #self.cdh_aws_helper.configure(cfg=config_file)
+        #except Exception, e:
+            #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
         
         
-        # Check connection to CDH CM
-        self.logger.info("testing connection to CDH CM...")
-        try:
-            self.cdh_aws_helper.cm_connect()
-        except Exception, e:
-            raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
+        ## Check connection to CDH CM
+        #self.logger.info("testing connection to CDH CM...")
+        #try:
+            #self.cdh_aws_helper.cm_connect()
+        #except Exception, e:
+            #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
         
         
-        # Check connection to CDH CM
-        self.logger.info("testing connection to AWS boto...")
-        try:
-            self.cdh_aws_helper.boto_connect()
-        except Exception, e:
-            raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
-        
-
-    def reload_composite_data(self):
-        """ load composite (combined) CDH / AWS data
-        """
-        self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3])) 
-        self.cdh_aws_helper.reload_composite_data()
+        ## Check connection to CDH CM
+        #self.logger.info("testing connection to AWS boto...")
+        #try:
+            #self.cdh_aws_helper.boto_connect()
+        #except Exception, e:
+            #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
         
 
-    def get_instances(self):
-        """ load composite (combined) CDH / AWS data
-        """
-        self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3])) 
-        instances = self.cdh_aws_helper.get_instances()
-        return instances
-        
-        
-        
+
 
 #                      **********************************************************
 #                      **** mainRun - parse args and decide what to do
@@ -104,31 +89,18 @@ def mainRun(opts, parser):
         logger.setLevel("INFO")
     logger.info("%s starting..." % inspect.stack()[0][3])
     
-    logger.debug("creating CLI object...") 
-    cdh_aws_manager = Manager(logger=logger)
-    logger.debug("setting up Manager...") 
+    logger.debug("creating Helper_Manager object...") 
+    mngr = Helper_Manager(logger=logger)
+    logger.debug("setting up Helper_Manager...") 
 
-    #try:
-        #cdh_aws_manager.configure(**opts.__dict__)
-    #except Exception, e:
-        #logger.error("%s" % e)
-        #parser.print_help()
-        #sys.exit(1)
+    try:
+        mngr.configure(**opts.__dict__)
+    except Exception, e:
+        logger.error("%s" % e)
+        parser.print_help()
+        sys.exit(1)
     
-    ## and load composite data (CDH and AWS combined)
-    #logger.debug("loading composite CHD/AWS data...") 
-    #cdh_aws_manager.reload_composite_data()    
-    
-    ## list instances
-    #composite_instances = cdh_aws_manager.get_instances()
-    
-    #for k,instance in composite_instances.iteritems():
-        ##print instance.aws_instance.__dict__
-        #pass
-    
-    
-    
-        
+
     logger.info("all done")   
 
 
