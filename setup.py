@@ -9,11 +9,10 @@ setup(
     scripts=['cli/cli.py',],
     url='https://github.com/andrew-szymanski/python-generic-rest-client',
     license='LICENSE.txt',
-    description='Basic generic python REST client, based on restkit',
+    description='Basic extendable python REST client, based on restkit',
     long_description=open('README.md').read(),
     install_requires=[
         "simplejson>=2.5.2",
-        "boto>=2.6",
         "restkit>=4.2.2",
     ],
 )
