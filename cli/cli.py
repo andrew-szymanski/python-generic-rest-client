@@ -189,6 +189,7 @@ def mainRun(opts, parser):
 # ./cli.py
 # ./cli.py  --debug=Y
 # alias d='cli/cli.py -d Y -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg';alias a='cli/cli.py  -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg'
+# ./cli/cli.py -d true -x helpers/service_discovery_helper.Helper.Method
 
 def main(argv=None):
     from optparse import OptionParser, OptionGroup
