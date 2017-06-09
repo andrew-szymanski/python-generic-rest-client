@@ -22,127 +22,135 @@ console.setFormatter(formatter)
 logging.getLogger(__name__).addHandler(console)
 logger = logging.getLogger(__name__)
 
-def importFromURI(uri, absl):
-   """ import helper
+def importFromURI(uri):
+   """ import module
    """
    mod = None
-   if not absl:
-      uri = os.path.normpath(os.path.join(os.path.dirname(__file__), uri))
-   path, fname = os.path.split(uri)
-   mname, ext = os.path.splitext(fname)
+   mname = os.path.basename(uri)
+   print uri
+   print mname
 
-   if os.path.exists(os.path.join(path,mname)+'.pyc'):
+   if os.path.exists(uri+'.pyc'):
       try:
-            return imp.load_compiled(mname, uri)
+            return imp.load_compiled(mname, uri+'.pyc')
       except:
             pass
-   if os.path.exists(os.path.join(path,mname)+'.py'):
+   if os.path.exists(uri+'.py'):
       try:
-            return imp.load_source(mname, uri)
+            return imp.load_source(mname, uri+'.py')
       except:
             pass
 
    return mod
 
-def import_class(cl):
-   """ dot notation for relative
-   """
-   
-   # get root dir of this app
-   this_module_fullpath = os.path.realpath(__file__)
-   this_module_dir = os.path.dirname(this_module_fullpath)
-   this_project_dir = os.path.dirname(this_module_dir)
-   print this_project_dir
-   
-   
-   
-   #d = cl.rfind(".")
-   #classname = cl[d+1:len(cl)]
-   #m = __import__(cl[0:d], globals(), locals(), [classname])
-   #return getattr(m, classname)
+
  
 
 class Helper_Manager(object):
-    """ Main class which does the whole workflow
-    """
-    def __init__(self, *args, **kwargs):
-        """Create an object and attach or initialize logger
-        """
-        self.logger = kwargs.get('logger',None)
-        if ( self.logger is None ):
+   """ Main class which does the whole workflow
+   """
+   def __init__(self, *args, **kwargs):
+      """Create an object and attach or initialize logger
+      """
+      self.logger = kwargs.get('logger',None)
+      if ( self.logger is None ):
             # Get an instance of a logger
             self.logger = logger
-        # initial log entry
-        self.logger.setLevel(logger.getEffectiveLevel())
-        self.logger.debug("%s: %s version [%s]" % (self.__class__.__name__, inspect.getfile(inspect.currentframe()),__version__))
-        
-        # initialize all vars to avoid "undeclared"
-        # and to have a nice neat list of all member vars
-        # self.cdh_aws_helper = None
+      # initial log entry
+      self.logger.setLevel(logger.getEffectiveLevel())
+      self.logger.debug("%s: %s version [%s]" % (self.__class__.__name__, inspect.getfile(inspect.currentframe()),__version__))
+      
+      # initialize all vars to avoid "undeclared"
+      # and to have a nice neat list of all member vars
+      # self.cdh_aws_helper = None
 
-        
-
-
-    def configure(self, *args, **kwargs):
-        """ Grab and validate all input params
-        Will throw Exception on error(s)
-        """
-        self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3])) 
+      
 
 
-        # read in configuration file
-        config_file = kwargs.get('cfg', None)
-        self.logger.info("reading in configuration file [%s]..." % config_file)
-        
-        # import specified helper module
-        helper_module_arg = kwargs.get('exec')
-        #helper_module,helper_method = helper_module_arg.split(".")
-        self.logger.info("importing helper module [%s]..." % helper_module_arg)
-        
-        import_class("a")
-        #import_class("helpers/service_discovery_helper.Helper")
- 
-        
-        #import helpers.boto_helper
-        # klass = import_class(helper_module_arg)
+   def configure(self, *args, **kwargs):
+      """ Grab and validate all input params
+      Will throw Exception on error(s)
+      """
+      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3])) 
 
-        # helper_module_imported = importFromURI("/home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper", True)
-        
-        
-        #helper_module_imported = imp.load_source("service_discovery_helper", "/home/madpole/data/code/github/python-generic-rest-client/helpers/service_discovery_helper.py")
-        #print helper_module_imported
-        #my_class = getattr(helper_module_imported, 'Helper')
-        #my_instance = my_class()
-        #print my_instance
-        
- 
-        
-        
-        
-        # Composite Cloudera Helper_Manager API / AWS boto helper
-        #self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
-        #try:
+
+      # read in configuration file
+      config_file = kwargs.get('cfg', None)
+      self.logger.info("reading in configuration file [%s]..." % config_file)
+      
+      # import specified helper module
+      helper_module_arg = kwargs.get('exec')
+      #helper_module,helper_method = helper_module_arg.split(".")
+      self.logger.info("importing helper module [%s]..." % helper_module_arg)
+      
+      klass = self.import_class("helpers/service_discovery_helper.Helper")
+      print klass
+      #import_class("helpers/service_discovery_helper.Helper")
+
+      
+      #import helpers.boto_helper
+      # klass = import_class(helper_module_arg)
+
+      # helper_module_imported = importFromURI("/home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper", True)
+      
+      
+      #helper_module_imported = imp.load_source("service_discovery_helper", "/home/madpole/data/code/github/python-generic-rest-client/helpers/service_discovery_helper.py")
+      #print helper_module_imported
+      #my_class = getattr(helper_module_imported, 'Helper')
+      #my_instance = my_class()
+      #print my_instance
+      
+
+      
+      
+      
+      # Composite Cloudera Helper_Manager API / AWS boto helper
+      #self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
+      #try:
             #self.cdh_aws_helper.configure(cfg=config_file)
-        #except Exception, e:
+      #except Exception, e:
             #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
-        
-        
-        ## Check connection to CDH CM
-        #self.logger.info("testing connection to CDH CM...")
-        #try:
+      
+      
+      ## Check connection to CDH CM
+      #self.logger.info("testing connection to CDH CM...")
+      #try:
             #self.cdh_aws_helper.cm_connect()
-        #except Exception, e:
+      #except Exception, e:
             #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
-        
-        
-        ## Check connection to CDH CM
-        #self.logger.info("testing connection to AWS boto...")
-        #try:
+      
+      
+      ## Check connection to CDH CM
+      #self.logger.info("testing connection to AWS boto...")
+      #try:
             #self.cdh_aws_helper.boto_connect()
-        #except Exception, e:
+      #except Exception, e:
             #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
-        
-
+      
+   def import_class(self, cl):
+      """ dot notation for relative
+      """
+      
+      # get root dir of this app
+      this_module_fullpath = os.path.realpath(__file__)
+      this_module_dir = os.path.dirname(this_module_fullpath)
+      this_project_dir = os.path.dirname(this_module_dir)
+      self.logger.debug("  project dir: [%s]" % this_project_dir)
+      
+      # split path to the module from class name
+      module_path,class_name = cl.split(".")
+      module_full_path = "%s/%s" % (this_project_dir,module_path)
+      self.logger.debug("  module: [%s], class: [%s]" % (module_full_path,class_name))
+      
+      # import module
+      helper_module_imported = importFromURI(module_full_path)
+      print helper_module_imported
+      
+      #print cl
+      #d = cl.rfind(".")
+      #classname = cl[d+1:len(cl)]
+      #m = __import__(cl[0:d], globals(), locals(), [classname])
+      #return getattr(m, classname)
 
 
 #                      **********************************************************
