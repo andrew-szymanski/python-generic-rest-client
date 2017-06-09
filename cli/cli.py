@@ -3,7 +3,7 @@
 __author__ = "Andrew Szymanski ()"
 __version__ = "0.1"
 
-""" main script / example how to use CdhAwsHelper
+""" main script
 """
 import sys
 import logging
@@ -12,6 +12,7 @@ import inspect
 import imp
 
 # import helpers.cdh_aws_helper
+# import /home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper.py
 
 
 LOG_INDENT = "  "
@@ -43,6 +44,12 @@ def importFromURI(uri, absl):
 
    return mod
 
+def import_class(cl):
+    d = cl.rfind(".")
+    classname = cl[d+1:len(cl)]
+    m = __import__(cl[0:d], globals(), locals(), [classname])
+    return getattr(m, classname)
+ 
 
 class Helper_Manager(object):
     """ Main class which does the whole workflow
@@ -61,6 +68,7 @@ class Helper_Manager(object):
         # initialize all vars to avoid "undeclared"
         # and to have a nice neat list of all member vars
         # self.cdh_aws_helper = None
+
         
 
 
@@ -77,9 +85,21 @@ class Helper_Manager(object):
         
         # import specified helper module
         helper_module_arg = kwargs.get('exec')
-        helper_module,helper_method = helper_module_arg.split(".")
-        self.logger.info("importing helper module [%s]..." % helper_module)
-        helper = importFromURI(helper_module, False)
+        #helper_module,helper_method = helper_module_arg.split(".")
+        self.logger.info("importing helper module [%s]..." % helper_module_arg)
+        
+ 
+        
+        #import helpers.boto_helper
+        # klass = import_class(helper_module_arg)
+
+        # helper_module_imported = importFromURI("/home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper", True)
+        helper_module_imported = imp.load_source("service_discovery_helper", "/home/madpole/data/code/github/python-generic-rest-client/helpers/service_discovery_helper.py")
+        print helper_module_imported
+        #my_class = getattr(helper_module_imported, 'BotoHelperEC2')
+        #my_instance = my_class()
+        
+ 
         
         
         
@@ -156,7 +176,7 @@ def main(argv=None):
     cat_options = OptionGroup(parser, "options")
     cat_options.add_option("-d", "--debug", help="debug logging, specify any value to enable debug, omit this param to disable, example: --debug=False", default=False)
     cat_options.add_option("-c", "--cfg", help="configuration required by helper, KEY=VALUE format, example: -c $HOME/configs/service_discovery.cfg", default=None)
-    cat_options.add_option("-x", "--exec", help="execute helper command, in format 'helpers.my_helper.my_method.  Method must always take only json file as argument / input", default="NOT_SPECIFIED")
+    cat_options.add_option("-x", "--exec", help="execute helper command, in format 'helpers/my_helper.my_method.  Method must always take only json file as argument / input", default="NOT_SPECIFIED")
     parser.add_option_group(cat_options)
 
     try: 
