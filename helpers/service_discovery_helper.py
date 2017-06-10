@@ -60,7 +60,31 @@ class ServiceDiscoveryClient(object):
       self.logger.info("json file: [%s]" %  json_file)
       with open(json_file) as json_data:
         d = load(json_data)
-        print(d)
+        #rint(d)
+
+      # get key values info variables
+      component = d["component"]["code"]
+      namespace = d["namespace"]["code"]
+      group = d["group"]["code"]
+      self.logger.info("%s component: [%s]" %  (LOG_INDENT, component))
+      self.logger.info("%s namespace: [%s]" %  (LOG_INDENT, namespace))
+      self.logger.info("%s group: [%s]" %  (LOG_INDENT, group))
+
+      instances_dict = d["instances"][0]
+      hostname = instances_dict["hostname"]
+      protocol = instances_dict["protocol"]
+      ipv4 = instances_dict["ipv4"]
+      transport = instances_dict["transport"]
+      port = instances_dict["port"]
+      self.logger.info("%s hostname: [%s]" %  (LOG_INDENT, hostname))
+      self.logger.info("%s protocol: [%s]" %  (LOG_INDENT, protocol))
+      self.logger.info("%s ipv4: [%s]" %  (LOG_INDENT, ipv4))
+      self.logger.info("%s transport: [%s]" %  (LOG_INDENT, transport))
+      self.logger.info("%s port: [%s]" %  (LOG_INDENT, port))
+
+      
+      return
+
 
       
       # restkit playgound
