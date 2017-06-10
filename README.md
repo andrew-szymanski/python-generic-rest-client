@@ -17,7 +17,7 @@ Config file
 
 Usage examples
 ==============
-./cli/cli.py -d true -c ~/data/configs/service-discovery-client.cfg -x helpers/service_discovery_helper.ServiceDiscoveryClient.register
+./cli/cli.py -d true -c ~/data/configs/service-discovery-client.cfg -j ~/data/configs/register.json -x helpers/service_discovery_helper.ServiceDiscoveryClient.register
 
 
 

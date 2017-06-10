@@ -10,7 +10,7 @@ import os
 import inspect
 
 from restkit import *
-from simplejson import loads, dumps
+from simplejson import load, loads, dumps
 
 # constants
 LOG_INDENT = "  "        # to prettify logs
@@ -54,6 +54,14 @@ class ServiceDiscoveryClient(object):
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))         
       config_file = kwargs.get('cfg',"YOU_MUST_SPECIFY_CONFIG_FILE")
       self.configure(config_file)
+
+      # read in json file
+      json_file = kwargs.get('json',"YOU_MUST_SPECIFY_JSON_FILE")
+      self.logger.info("json file: [%s]" %  json_file)
+      with open(json_file) as json_data:
+        d = load(json_data)
+        print(d)
+
       
       # restkit playgound
       uri_root = self.dict_config[URI]
