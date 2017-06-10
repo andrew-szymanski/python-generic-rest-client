@@ -10,6 +10,7 @@ import os
 import inspect
 
 from restkit import *
+from simplejson import loads, dumps
 
 # constants
 LOG_INDENT = "  "        # to prettify logs
@@ -64,6 +65,12 @@ class ServiceDiscoveryClient(object):
       r = c.request(uri)
       print r.status
       print r.body_string()
+
+      self.logger.debug("tyring POST URI: [%s]" % (uri))
+      res = Resource(uri)
+      data = dict(code="asz-code", name="asz-name", description="andrew test",meta="andrew meta" or None)
+      response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
+      print response    
       
 
 
