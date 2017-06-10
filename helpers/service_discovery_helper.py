@@ -9,10 +9,15 @@ import logging
 import os
 import inspect
 
+from restkit import *
+
 # constants
 LOG_INDENT = "  "        # to prettify logs
 # keys in cfg file
 URI = "URI"
+
+# restkit
+# http://restkit.readthedocs.io/en/latest/api/client.html
 
 class ServiceDiscoveryClient(object):
    """
@@ -48,6 +53,18 @@ class ServiceDiscoveryClient(object):
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))         
       config_file = kwargs.get('cfg',"YOU_MUST_SPECIFY_CONFIG_FILE")
       self.configure(config_file)
+      
+      # restkit playgound
+      uri_root = self.dict_config[URI]
+      uri = uri_root + "/groups"
+      
+      
+      self.logger.debug("playing with URI: [%s]" % (uri))
+      c = Client()
+      r = c.request(uri)
+      r.status
+      print r.body_string()
+      
 
 
 
