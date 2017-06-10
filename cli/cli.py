@@ -27,12 +27,14 @@ def importFromURI(uri):
    """
    mod = None
    mname = os.path.basename(uri)
+   mname = mname.replace('.py','')
+   
 
-   if os.path.exists(uri+'.py'):
+   if os.path.exists(uri):
       try:
-            return imp.load_source(mname, uri+'.py')
-      except:
-            pass
+            return imp.load_source(mname, uri)
+      except Exception, e:
+            raise Exception("ERROR: failed to load module: [%s] from file: [%s], error: [%s]" % (mname,uri,e))
 
    return mod
 
@@ -57,16 +59,11 @@ class Helper_Manager(object):
       
 
 
-   def configure(self, *args, **kwargs):
+   def execute(self, *args, **kwargs):
       """ Grab and validate all input params
       Will throw Exception on error(s)
       """
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3])) 
-
-
-      # read in configuration file
-      config_file = kwargs.get('cfg', None)
-      self.logger.info("reading in configuration file [%s]..." % config_file)
       
       # import specified helper module
       helper_module_arg = kwargs.get('exec')
@@ -75,21 +72,13 @@ class Helper_Manager(object):
       helper_class,helper_method = helper_module_arg.rsplit(".",1)
       self.logger.debug("importing class: [%s], method: [%s]" % (helper_class,helper_method))
 
-      
       klass = self.import_class(helper_class)
       my_instance = klass(logger=self.logger)
       
       # execute specified method
-      getattr(my_instance, "configure")()
+      getattr(my_instance, helper_method)(args, kwargs)
 
-      
-      
-      ## Check connection to CDH CM
-      #self.logger.info("testing connection to AWS boto...")
-      #try:
-            #self.cdh_aws_helper.boto_connect()
-      #except Exception, e:
-            #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
+
       
    def import_class(self, cl):
       """ dot notation for relative
@@ -103,11 +92,13 @@ class Helper_Manager(object):
       
       # split path to the module from class name
       module_path,class_name = cl.split(".")
-      module_full_path = "%s/%s" % (this_project_dir,module_path)
+      module_full_path = "%s/%s.py" % (this_project_dir,module_path)
       self.logger.debug("  module: [%s], class: [%s]" % (module_full_path,class_name))
       
       # import module
       helper_module_imported = importFromURI(module_full_path)
+      if not helper_module_imported:
+         raise Exception("ERROR: Failed to dynamically load module [%s], error: [%s]" % (module_full_path,e))
  
       # and import class
       my_class = getattr(helper_module_imported, class_name)
@@ -135,7 +126,8 @@ def mainRun(opts, parser):
     logger.debug("setting up Helper_Manager...") 
 
     try:
-        mngr.configure(**opts.__dict__)
+        # execute specified class method
+        mngr.execute(**opts.__dict__)   
     except Exception, e:
         logger.error("%s" % e)
         parser.print_help()
@@ -152,7 +144,7 @@ def mainRun(opts, parser):
 # ./cli.py
 # ./cli.py  --debug=Y
 # alias d='cli/cli.py -d Y -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg';alias a='cli/cli.py  -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg'
-# ./cli/cli.py -d true -x helpers/service_discovery_helper.Helper.Method
+# ./cli/cli.py -d true -c /home/madpole/data/configs/service-discovery-client.cfg -x helpers/service_discovery_helper.ServiceDiscoveryClient.register
 
 def main(argv=None):
     from optparse import OptionParser, OptionGroup
