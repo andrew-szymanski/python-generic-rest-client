@@ -1,0 +1,20 @@
+  {
+    "group": {
+      "code": "ASZ"
+    },
+    "component": {
+      "code": "MYSQL"
+    },
+    "namespace": {
+      "code": "ASZ"
+    },
+    "instances": [
+      {
+        "transport": "TCP",
+        "protocol": "mysql",
+        "hostname": "sdr.hostname.com",
+        "ipv4": "10.10.10.10",
+        "port": 3306
+      }
+    ]
+  }

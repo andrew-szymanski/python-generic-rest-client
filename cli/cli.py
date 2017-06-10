@@ -158,7 +158,8 @@ def main(argv=None):
     # cat options
     cat_options = OptionGroup(parser, "options")
     cat_options.add_option("-d", "--debug", help="debug logging, specify any value to enable debug, omit this param to disable, example: --debug=False", default=False)
-    cat_options.add_option("-c", "--cfg", help="configuration required by helper, KEY=VALUE format, example: -c $HOME/configs/service_discovery.cfg", default=None)
+    cat_options.add_option("-c", "--cfg", help="configuration file if required by helper, KEY=VALUE format, example: -c $HOME/configs/service_discovery.cfg", default=None)
+    cat_options.add_option("-j", "--json", help="json payload if required by helper, example: -c /tmp/payload.json", default=None)    
     cat_options.add_option("-x", "--exec", help="execute helper command, in format 'helpers/my_helper.my_method.  Method must always take only json file as argument / input", default="NOT_SPECIFIED")
     parser.add_option_group(cat_options)
 
