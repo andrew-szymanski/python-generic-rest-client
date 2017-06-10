@@ -63,14 +63,31 @@ class ServiceDiscoveryClient(object):
       self.logger.debug("playing with URI: [%s]" % (uri))
       c = Client()
       r = c.request(uri)
-      print r.status
-      print r.body_string()
+      #print r.status
+      #print r.body_string()
 
-      self.logger.debug("tyring POST URI: [%s]" % (uri))
       res = Resource(uri)
-      data = dict(code="asz-code", name="asz-name", description="andrew test",meta="andrew meta" or None)
-      response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
-      print response    
+      # Query
+      code="ASZ-CODE"
+      query = "?code=%s" % code
+      query_uri = "%s%s" % (uri,query)
+      self.logger.debug("QUERY: [%s]" % (query_uri))
+      r = c.request(query_uri)
+      print r.status
+      result_str = r.body_string()
+      result_list = loads(result_str)
+      result_dict = result_list[0]
+      self.logger.debug("%suuid: [%s]" % (LOG_INDENT, result_dict["uuid"]))
+
+
+ 
+
+
+      # POST
+      #self.logger.debug("tyring POST URI: [%s]" % (uri))
+      # data = dict(code="asz-code", name="asz-name", description="andrew test",meta="andrew meta" or None)
+      # response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
+      # print response    
       
 
 
