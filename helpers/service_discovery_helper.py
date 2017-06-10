@@ -11,7 +11,8 @@ import inspect
 
 # constants
 LOG_INDENT = "  "        # to prettify logs
-
+# keys in cfg file
+URI = "URI"
 
 class ServiceDiscoveryClient(object):
    """
