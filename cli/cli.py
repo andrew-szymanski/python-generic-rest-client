@@ -144,7 +144,8 @@ def mainRun(opts, parser):
 # ./cli.py
 # ./cli.py  --debug=Y
 # alias d='cli/cli.py -d Y -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg';alias a='cli/cli.py  -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg'
-# ./cli/cli.py -d true -c /home/madpole/data/configs/service-discovery-client.cfg -x helpers/service_discovery_helper.ServiceDiscoveryClient.register
+# 
+# ./cli/cli.py -d true -c /Users/andszy/data/configs/service-discovery-client.cfg -x helpers/service_discovery_helper.ServiceDiscoveryClient.register
 
 def main(argv=None):
     from optparse import OptionParser, OptionGroup
