@@ -12,7 +12,7 @@
       {
         "transport": "TCP",
         "protocol": "mysql",
-        "hostname": "sdr.hostname.com",
+        "hostname": "mysql.hostname.com",
         "ipv4": "10.10.10.10",
         "port": 3306
       }
