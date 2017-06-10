@@ -1,5 +1,7 @@
-python-generic-rest-client
+python-rest-clients
 =============
+
+Collection of python REST clients for PoCs.  The idea is that they are all in the same repo, share the same cli and each client is just an additional py module.  This is just for quick turn around PoCs.
 
 UNDER CONSTRUCTION
 
