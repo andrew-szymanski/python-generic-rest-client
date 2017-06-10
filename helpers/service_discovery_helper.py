@@ -13,7 +13,7 @@ import inspect
 LOG_INDENT = "  "        # to prettify logs
 
 
-class Helper(object):
+class ServiceDiscoveryClient(object):
     """
     """    
     def __init__(self, *args, **kwargs):
@@ -29,11 +29,16 @@ class Helper(object):
             self.logger = logging.getLogger('')
             self.logger.setLevel(logging.INFO)
         # initial log entry
-        self.logger.debug("%s: %s version [%s]" % (self.__class__.__name__, inspect.getfile(inspect.currentframe()),__version__))
+        self.logger.info("%s: %s version [%s]" % (self.__class__.__name__, inspect.getfile(inspect.currentframe()),__version__))
         # initialize variables - so all are listed here for convenience
-        #self.api = None
-        print "   ---- blah"
-        
+        self.uri = None
+
+    def configure(self, *args, **kwargs):
+        """ grab and validate config
+        """
+        self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))         
+        config_file = kwargs.get('cfg',None)
+        self.logger.debug("%s: [%s]" % ("config_file", config_file))
 
 
 

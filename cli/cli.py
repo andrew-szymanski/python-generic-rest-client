@@ -28,11 +28,6 @@ def importFromURI(uri):
    mod = None
    mname = os.path.basename(uri)
 
-   if os.path.exists(uri+'.pyc'):
-      try:
-            return imp.load_compiled(mname, uri+'.pyc')
-      except:
-            pass
    if os.path.exists(uri+'.py'):
       try:
             return imp.load_source(mname, uri+'.py')
@@ -58,9 +53,6 @@ class Helper_Manager(object):
       self.logger.setLevel(logger.getEffectiveLevel())
       self.logger.debug("%s: %s version [%s]" % (self.__class__.__name__, inspect.getfile(inspect.currentframe()),__version__))
       
-      # initialize all vars to avoid "undeclared"
-      # and to have a nice neat list of all member vars
-      # self.cdh_aws_helper = None
 
       
 
@@ -85,40 +77,11 @@ class Helper_Manager(object):
 
       
       klass = self.import_class(helper_class)
-      my_instance = klass()
-      #import_class("helpers/service_discovery_helper.Helper")
+      my_instance = klass(logger=self.logger)
+      
+      # execute specified method
+      getattr(my_instance, "configure")()
 
-      
-      #import helpers.boto_helper
-      # klass = import_class(helper_module_arg)
-
-      # helper_module_imported = importFromURI("/home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper", True)
-      
-      
-      #helper_module_imported = imp.load_source("service_discovery_helper", "/home/madpole/data/code/github/python-generic-rest-client/helpers/service_discovery_helper.py")
-      #print helper_module_imported
-      #my_class = getattr(helper_module_imported, 'Helper')
-      #my_instance = my_class()
-      #print my_instance
-      
-
-      
-      
-      
-      # Composite Cloudera Helper_Manager API / AWS boto helper
-      #self.cdh_aws_helper = helpers.cdh_aws_helper.CdhAwsHelper(logger=self.logger)
-      #try:
-            #self.cdh_aws_helper.configure(cfg=config_file)
-      #except Exception, e:
-            #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
-      
-      
-      ## Check connection to CDH CM
-      #self.logger.info("testing connection to CDH CM...")
-      #try:
-            #self.cdh_aws_helper.cm_connect()
-      #except Exception, e:
-            #raise Exception("error while trying to configure CdhAwsHelper: [%s]" % e)
       
       
       ## Check connection to CDH CM
