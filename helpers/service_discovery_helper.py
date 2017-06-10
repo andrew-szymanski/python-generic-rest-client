@@ -62,7 +62,7 @@ class ServiceDiscoveryClient(object):
       self.logger.debug("playing with URI: [%s]" % (uri))
       c = Client()
       r = c.request(uri)
-      r.status
+      print r.status
       print r.body_string()
       
 
