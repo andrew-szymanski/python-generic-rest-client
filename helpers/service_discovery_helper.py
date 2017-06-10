@@ -62,23 +62,49 @@ class ServiceDiscoveryClient(object):
       
       self.logger.debug("playing with URI: [%s]" % (uri))
       c = Client()
-      r = c.request(uri)
+      #r = c.request(uri)
       #print r.status
       #print r.body_string()
 
       res = Resource(uri)
       # Query
       code="ASZ-CODE"
-      query = "?code=%s" % code
-      query_uri = "%s%s" % (uri,query)
-      self.logger.debug("QUERY: [%s]" % (query_uri))
-      r = c.request(query_uri)
-      print r.status
-      result_str = r.body_string()
+      query = dict(code=code)
+      response = res.get(params_dict=query)
+      #print response.status
+      result_str = response.body_string()
       result_list = loads(result_str)
-      result_dict = result_list[0]
-      self.logger.debug("%suuid: [%s]" % (LOG_INDENT, result_dict["uuid"]))
+      if not result_list:
+         print "   doesnt exist"
+         self.logger.debug("tyring POST URI: [%s]" % (uri))
+         data = dict(code="ASZ-CODE", name="asz-name", description="andrew test",meta="andrew meta" or None)
+         response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
+         print response.__dict__    
+      else:
+         print "   exist"
+         result_dict = result_list[0]
+         uuid = result_dict["uuid"]
+         self.logger.debug("%suuid: [%s]" % (LOG_INDENT, uuid))
+         response = res.delete(uuid)
 
+      #print response.__dict__
+
+
+      # query = "?code=%s" % code
+      # query_uri = "%s%s" % (uri,query)
+      # self.logger.debug("QUERY: [%s]" % (query_uri))
+      # r = c.request(query_uri)
+      # print r.status
+      # result_str = r.body_string()
+      # result_list = loads(result_str)
+      # result_dict = result_list[0]
+      # uuid = result_dict["uuid"]
+      # self.logger.debug("%suuid: [%s]" % (LOG_INDENT, uuid))
+
+      # DELETE
+      #delete_uri = "%s/%s" % (uri, uuid)
+      # response = res.delete(uuid)
+      # print response.__dict__
 
  
 
@@ -128,4 +154,26 @@ class ServiceDiscoveryClient(object):
       self.logger.info("%s URI: [%s]" % (LOG_INDENT, self.dict_config[URI]))
       
 
+# Register json
+  # POST /v1/instances
+  # {
+  #   "group": {
+  #     "code": "POC-V1"
+  #   },
+  #   "component": {
+  #     "code": "mysql"
+  #   },
+  #   "namespace": {
+  #     "code": "DEV"
+  #   },
+  #   "instances": [
+  #     {
+  #       "transport": "TCP",
+  #       "protocol": "mysql",
+  #       "hostname": "blah.com",
+  #       "ipv4": "10.1.1.1",
+  #       "port": 3306
+  #     }
+  #   ]
+  # }
 
