@@ -76,10 +76,26 @@ class ServiceDiscoveryClient(object):
       
       # (re)register group
       uri = uri_root + "/groups"
-      self.register_group(uri, group, component)
+      self.register_group(uri, group, "ASZ GROUP NAME")
+      
+      # (re)register component
+      uri = uri_root + "/components"
+      self.register_component(uri, component, group, "ASZ COMPONENT NAME")           
       
       
       return
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
       # 
       # get key values info variables
       component = payload["component"]["code"]
@@ -110,7 +126,10 @@ class ServiceDiscoveryClient(object):
       # (re)register group
       uri = uri_root + "/group"
       self.register_group(uri, group, namespace)
-      
+
+      # (re)register component
+      uri = uri_root + "/group"
+      self.register_group(uri, group, namespace)      
       
       
       return
@@ -235,7 +254,7 @@ class ServiceDiscoveryClient(object):
 
       resource = Resource(uri)
       # check if record already exists
-      query = dict(code=code, name=name)
+      query = dict(code=code)
       response = resource.get(params_dict=query)
       result_str = response.body_string()
       result_list = loads(result_str)
@@ -251,22 +270,25 @@ class ServiceDiscoveryClient(object):
          return
 
       # entry does not exist - create it
-      self.logger.debug("registering...")
+      self.logger.debug("registering group...")
       meta_data = "updated by andrew: %s" % timestamp
       data = dict(code=code, name=name, description="andrew test",meta=meta_data or None)
       response = resource.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
-      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )      
+      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )    
       
-   def register_component(self, uri, code, name):
+      
+      
+   def register_component(self, uri, component, group, name):
       """ (re)register group
       """
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
       
-      self.logger.debug("uri: [%s],code: [%s],name: [%s]" % (uri, code, name))
+      self.logger.debug("uri: [%s],component: [%s],group: [%s],name: [%s]" % (uri, component, group, name))
 
       resource = Resource(uri)
+
       # check if record already exists
-      query = dict(code=code, name=name)
+      query = dict(code=group)
       response = resource.get(params_dict=query)
       result_str = response.body_string()
       result_list = loads(result_str)
@@ -282,9 +304,10 @@ class ServiceDiscoveryClient(object):
          return
 
       # entry does not exist - create it
-      self.logger.debug("registering...")
+      self.logger.debug("registering component...")
       meta_data = "updated by andrew: %s" % timestamp
-      data = dict(code=code, name=name, description="andrew test",meta=meta_data or None)
+      data = dict(group=dict(code=group),code=group,name=name)
+      print dumps(data)
       response = resource.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
       self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )      
 
