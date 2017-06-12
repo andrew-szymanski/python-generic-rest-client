@@ -74,125 +74,25 @@ class ServiceDiscoveryClient(object):
       self.logger.info("%s namespace: [%s]" %  (LOG_INDENT, namespace))
       self.logger.info("%s group: [%s]" %  (LOG_INDENT, group))
       
-      # (re)register group
-      uri = uri_root + "/groups"
-      self.register_group(uri, group, "ASZ GROUP NAME")
+      ## (re)register group
+      #uri = uri_root + "/groups"
+      #self.register_group(uri, group, "ASZ GROUP NAME")
       
-      # (re)register component
-      uri = uri_root + "/components"
-      self.register_component(uri, component, group, "ASZ COMPONENT NAME")           
-      
+      ## (re)register component
+      #uri = uri_root + "/components"
+      #self.register_component(uri, component, group, "ASZ COMPONENT NAME")           
       
       # register instance
-      instances_dict = payload["instances"][0]
-      hostname = instances_dict["hostname"]
-      protocol = instances_dict["protocol"]
-      ipv4 = instances_dict["ipv4"]
-      transport = instances_dict["transport"]
-      port = instances_dict["port"]
-      self.logger.info("%s hostname: [%s]" %  (LOG_INDENT, hostname))
-      self.logger.info("%s protocol: [%s]" %  (LOG_INDENT, protocol))
-      self.logger.info("%s ipv4: [%s]" %  (LOG_INDENT, ipv4))
-      self.logger.info("%s transport: [%s]" %  (LOG_INDENT, transport))
-      self.logger.info("%s port: [%s]" %  (LOG_INDENT, port))
-
-      # 
       uri = uri_root + "/instances"
       resource = Resource(uri)
-      self.logger.debug("registering component...") 
-      print dumps(payload)
-      return 
+      self.logger.debug("registering instance...") 
+      #print dumps(payload)
+      timestamp = time.strftime("%m-%m-%d %H:%M")
       response = resource.post(payload=dumps(payload), headers={'Content-Type': 'application/json'})
       self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )
       
       return
 
-      # check if record already exists
-      query = dict(code=component)
-      response = resource.get(params_dict=query)
-      result_str = response.body_string()
-      result_list = loads(result_str)
-      entry_exists = False
-      if result_list:
-         entry_exists = True
-      self.logger.debug("entry exists: [%s]" % (entry_exists))  
-
-      # if entry exists - delete so we can recreate it
-      if entry_exists:
-         result_dict = result_list[0]
-         uuid = result_dict["uuid"]
-         self.logger.debug("%s deleting uuid: [%s]" % (LOG_INDENT, uuid))
-         response = resource.delete(uuid)
-
-      # entry does not exist - create it
-      self.logger.debug("registering...")
-      timestamp = time.strftime("%Y-%m-%d %H:%M")
-      meta_data = timestamp
-      data = dict(code=component, name=namespace, description="andrew test",meta=meta_data or None)
-      response = resource.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
-      self.logger.debug("%s response: %s" %  (LOG_INDENT, response) )
-
-
-      return
-
-
-      
-
-      
-      self.logger.debug("playing with URI: [%s]" % (uri))
-      c = Client()
-      #r = c.request(uri)
-      #print r.status
-      #print r.body_string()
-
-      res = Resource(uri)
-      # Query
-      code="ASZ-CODE"
-      query = dict(code=code)
-      response = res.get(params_dict=query)
-      #print response.status
-      result_str = response.body_string()
-      result_list = loads(result_str)
-      if not result_list:
-         print "   doesnt exist"
-         self.logger.debug("tyring POST URI: [%s]" % (uri))
-         data = dict(code="ASZ-CODE", name="asz-name", description="andrew test",meta="andrew meta" or None)
-         response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
-         print response.__dict__    
-      else:
-         print "   exist"
-         result_dict = result_list[0]
-         uuid = result_dict["uuid"]
-         self.logger.debug("%suuid: [%s]" % (LOG_INDENT, uuid))
-         response = res.delete(uuid)
-
-      #print response.__dict__
-
-
-      # query = "?code=%s" % code
-      # query_uri = "%s%s" % (uri,query)
-      # self.logger.debug("QUERY: [%s]" % (query_uri))
-      # r = c.request(query_uri)
-      # print r.status
-      # result_str = r.body_string()
-      # result_list = loads(result_str)
-      # result_dict = result_list[0]
-      # uuid = result_dict["uuid"]
-      # self.logger.debug("%suuid: [%s]" % (LOG_INDENT, uuid))
-
-      # DELETE
-      #delete_uri = "%s/%s" % (uri, uuid)
-      # response = res.delete(uuid)
-      # print response.__dict__
-
- 
-
-
-      # POST
-      #self.logger.debug("tyring POST URI: [%s]" % (uri))
-      # data = dict(code="asz-code", name="asz-name", description="andrew test",meta="andrew meta" or None)
-      # response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
-      # print response    
    
    
    def register_group(self, uri, code, name):
@@ -297,27 +197,4 @@ class ServiceDiscoveryClient(object):
       self.dict_config = new_dict
       self.logger.info("%s URI: [%s]" % (LOG_INDENT, self.dict_config[URI]))
       
-
-# Register json
-  # POST /v1/instances
-  # {
-  #   "group": {
-  #     "code": "POC-V1"
-  #   },
-  #   "component": {
-  #     "code": "mysql"
-  #   },
-  #   "namespace": {
-  #     "code": "DEV"
-  #   },
-  #   "instances": [
-  #     {
-  #       "transport": "TCP",
-  #       "protocol": "mysql",
-  #       "hostname": "blah.com",
-  #       "ipv4": "10.1.1.1",
-  #       "port": 3306
-  #     }
-  #   ]
-  # }
 

@@ -12,14 +12,14 @@
     "code": "PROD"
   },
   "instance": {
-    "transport": "mysql",
-    "protocol": "string",
-    "hostname": "string",
-    "ipv4": "string",
-    "ipv6": "string",
+    "transport": "TCP",
+    "protocol": "mysql",
+    "hostname": "mysql.hostname.com",
+    "ipv4": "1.1.1.1",
+    "ipv6": "2.2.2.2",
     "port": 0,
-    "meta": "string",
+    "meta": "meta",
     "status": 0,
-    "status_str": "string"
+    "status_str": "status_str"
   }
 }
