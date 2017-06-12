@@ -9,6 +9,7 @@ import logging
 import os
 import inspect
 import time
+from array import *
 
 from restkit import *
 from simplejson import load, loads, dumps
@@ -59,19 +60,36 @@ class ServiceDiscoveryClient(object):
       # read in json file
       json_file = kwargs.get('json',"YOU_MUST_SPECIFY_JSON_FILE")
       self.logger.info("json file: [%s]" %  json_file)
+      payload = None
       with open(json_file) as json_data:
-        d = load(json_data)
-        #rint(d)
+        payload = load(json_data)
 
+      # root url
+      uri_root = self.dict_config[URI]
       # get key values info variables
-      component = d["component"]["code"]
-      namespace = d["namespace"]["code"]
-      group = d["group"]["code"]
+      component = payload["component"]["code"]
+      namespace = payload["namespace"]["code"]
+      group = payload["group"]["code"]
+      self.logger.info("%s component: [%s]" %  (LOG_INDENT, component))
+      self.logger.info("%s namespace: [%s]" %  (LOG_INDENT, namespace))
+      self.logger.info("%s group: [%s]" %  (LOG_INDENT, group))
+      
+      # (re)register group
+      uri = uri_root + "/groups"
+      self.register_group(uri, group, component)
+      
+      
+      return
+      # 
+      # get key values info variables
+      component = payload["component"]["code"]
+      namespace = payload["namespace"]["code"]
+      group = payload["group"]["code"]
       self.logger.info("%s component: [%s]" %  (LOG_INDENT, component))
       self.logger.info("%s namespace: [%s]" %  (LOG_INDENT, namespace))
       self.logger.info("%s group: [%s]" %  (LOG_INDENT, group))
 
-      instances_dict = d["instances"][0]
+      instances_dict = payload["instances"][0]
       hostname = instances_dict["hostname"]
       protocol = instances_dict["protocol"]
       ipv4 = instances_dict["ipv4"]
@@ -87,12 +105,38 @@ class ServiceDiscoveryClient(object):
       # so everything below needs to change when instances are ready
       # but the logic should be more less the same...maybe... 
 
-      # connect to resource
       uri_root = self.dict_config[URI]
-      uri = uri_root + "/groups"
+      
+      # (re)register group
+      uri = uri_root + "/group"
+      self.register_group(uri, group, namespace)
+      
+      
+      
+      return
+      
+      # (re)register component
+      uri = uri_root + "/components"
       self.logger.debug("resource URI: [%s]" % (uri))
       c = Client()
       resource = Resource(uri)
+      self.logger.debug("registering component")
+      component_dict = dict(code=component,name="andrew component name")
+      group_dict = dict(code=group)
+      component_array = array(group_dict, component_dict)
+      print dumps(component_array)
+      
+      return
+      response = resource.post(payload=dumps(component_dict), headers={'Content-Type': 'application/json'})
+      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )      
+
+      return
+      # 
+      self.logger.debug("registering...")      
+      response = resource.post(payload=dumps(payload), headers={'Content-Type': 'application/json'})
+      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )
+      
+      return
 
       # check if record already exists
       query = dict(code=component)
@@ -114,7 +158,7 @@ class ServiceDiscoveryClient(object):
       # entry does not exist - create it
       self.logger.debug("registering...")
       timestamp = time.strftime("%Y-%m-%d %H:%M")
-      meta_data = "%s,%s,%s,%s,%s,%s" % (hostname,protocol,ipv4,transport,port,timestamp)
+      meta_data = timestamp
       data = dict(code=component, name=namespace, description="andrew test",meta=meta_data or None)
       response = resource.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
       self.logger.debug("%s response: %s" %  (LOG_INDENT, response) )
@@ -180,8 +224,69 @@ class ServiceDiscoveryClient(object):
       # data = dict(code="asz-code", name="asz-name", description="andrew test",meta="andrew meta" or None)
       # response = res.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
       # print response    
+   
+   
+   def register_group(self, uri, code, name):
+      """ (re)register group
+      """
+      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
       
+      self.logger.debug("uri: [%s],code: [%s],name: [%s]" % (uri, code, name))
 
+      resource = Resource(uri)
+      # check if record already exists
+      query = dict(code=code, name=name)
+      response = resource.get(params_dict=query)
+      result_str = response.body_string()
+      result_list = loads(result_str)
+      entry_exists = False
+      if result_list:
+         entry_exists = True
+      self.logger.debug("entry exists: [%s]" % (entry_exists))  
+      timestamp = time.strftime("%Y-%m-%d %H:%M")
+
+      # if entry exists - delete so we can recreate it
+      if entry_exists:
+         self.logger.debug("group already exists, nothing to do")
+         return
+
+      # entry does not exist - create it
+      self.logger.debug("registering...")
+      meta_data = "updated by andrew: %s" % timestamp
+      data = dict(code=code, name=name, description="andrew test",meta=meta_data or None)
+      response = resource.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
+      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )      
+      
+   def register_component(self, uri, code, name):
+      """ (re)register group
+      """
+      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
+      
+      self.logger.debug("uri: [%s],code: [%s],name: [%s]" % (uri, code, name))
+
+      resource = Resource(uri)
+      # check if record already exists
+      query = dict(code=code, name=name)
+      response = resource.get(params_dict=query)
+      result_str = response.body_string()
+      result_list = loads(result_str)
+      entry_exists = False
+      if result_list:
+         entry_exists = True
+      self.logger.debug("entry exists: [%s]" % (entry_exists))  
+      timestamp = time.strftime("%Y-%m-%d %H:%M")
+
+      # if entry exists - delete so we can recreate it
+      if entry_exists:
+         self.logger.debug("group already exists, nothing to do")
+         return
+
+      # entry does not exist - create it
+      self.logger.debug("registering...")
+      meta_data = "updated by andrew: %s" % timestamp
+      data = dict(code=code, name=name, description="andrew test",meta=meta_data or None)
+      response = resource.post(payload=dumps(data), headers={'Content-Type': 'application/json'})
+      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )      
 
 
    def __readconfig__(self, config_file):
