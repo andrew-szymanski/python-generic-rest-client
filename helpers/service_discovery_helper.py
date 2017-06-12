@@ -83,28 +83,7 @@ class ServiceDiscoveryClient(object):
       self.register_component(uri, component, group, "ASZ COMPONENT NAME")           
       
       
-      return
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-      # 
-      # get key values info variables
-      component = payload["component"]["code"]
-      namespace = payload["namespace"]["code"]
-      group = payload["group"]["code"]
-      self.logger.info("%s component: [%s]" %  (LOG_INDENT, component))
-      self.logger.info("%s namespace: [%s]" %  (LOG_INDENT, namespace))
-      self.logger.info("%s group: [%s]" %  (LOG_INDENT, group))
-
+      # register instance
       instances_dict = payload["instances"][0]
       hostname = instances_dict["hostname"]
       protocol = instances_dict["protocol"]
@@ -117,41 +96,12 @@ class ServiceDiscoveryClient(object):
       self.logger.info("%s transport: [%s]" %  (LOG_INDENT, transport))
       self.logger.info("%s port: [%s]" %  (LOG_INDENT, port))
 
-      # from now on we are using "groups" because "instances" not ready yet
-      # so everything below needs to change when instances are ready
-      # but the logic should be more less the same...maybe... 
-
-      uri_root = self.dict_config[URI]
-      
-      # (re)register group
-      uri = uri_root + "/group"
-      self.register_group(uri, group, namespace)
-
-      # (re)register component
-      uri = uri_root + "/group"
-      self.register_group(uri, group, namespace)      
-      
-      
-      return
-      
-      # (re)register component
-      uri = uri_root + "/components"
-      self.logger.debug("resource URI: [%s]" % (uri))
-      c = Client()
-      resource = Resource(uri)
-      self.logger.debug("registering component")
-      component_dict = dict(code=component,name="andrew component name")
-      group_dict = dict(code=group)
-      component_array = array(group_dict, component_dict)
-      print dumps(component_array)
-      
-      return
-      response = resource.post(payload=dumps(component_dict), headers={'Content-Type': 'application/json'})
-      self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )      
-
-      return
       # 
-      self.logger.debug("registering...")      
+      uri = uri_root + "/instances"
+      resource = Resource(uri)
+      self.logger.debug("registering component...") 
+      print dumps(payload)
+      return 
       response = resource.post(payload=dumps(payload), headers={'Content-Type': 'application/json'})
       self.logger.debug("%s response: %s" %  (LOG_INDENT, response.__dict__) )
       

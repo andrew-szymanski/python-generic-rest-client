@@ -1,20 +1,25 @@
   {
-    "group": {
-      "code": "ASZ"
-    },
-    "component": {
-      "code": "MYSQL"
-    },
-    "namespace": {
-      "code": "ASZ"
-    },
-    "instances": [
-      {
-        "transport": "TCP",
-        "protocol": "mysql",
-        "hostname": "mysql.hostname.com",
-        "ipv4": "10.10.10.10",
-        "port": 3306
-      }
-    ]
+  "group": {
+    "uuid": "053e5a1d-3184-4028-b7a3-f560ddb9100d",
+    "code": "ER"
+  },
+  "component": {
+    "uuid": "68c75af5-d3d8-453f-8d8d-3106c7d4bba9",
+    "code": "MYSQL"
+  },
+  "namespace": {
+    "uuid": "1b26115d-8dc4-47bc-a093-b5fb6bc8aa66",
+    "code": "PROD"
+  },
+  "instance": {
+    "transport": "mysql",
+    "protocol": "string",
+    "hostname": "string",
+    "ipv4": "string",
+    "ipv6": "string",
+    "port": 0,
+    "meta": "string",
+    "status": 0,
+    "status_str": "string"
   }
+}
