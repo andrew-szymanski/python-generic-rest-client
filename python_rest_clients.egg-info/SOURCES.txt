@@ -1,0 +1,10 @@
+setup.py
+cli/__init__.py
+cli/cli.py
+helpers/__init__.py
+helpers/service_discovery_helper.py
+python_rest_clients.egg-info/PKG-INFO
+python_rest_clients.egg-info/SOURCES.txt
+python_rest_clients.egg-info/dependency_links.txt
+python_rest_clients.egg-info/requires.txt
+python_rest_clients.egg-info/top_level.txt

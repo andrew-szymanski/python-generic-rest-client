@@ -1,0 +1,2 @@
+simplejson>=2.5.2
+restkit>=4.2.2
