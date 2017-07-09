@@ -136,8 +136,8 @@ def mainRun(opts, parser):
         # execute specified class method
         mngr.execute(**opts.__dict__)   
     except Exception as caughtException:
-        parser.print_help()
         print "ERROR: [%s]%s" % (caughtException,'\n')
+        parser.print_help()
         #traceback.print_stack()
         sys.exit(1)
     

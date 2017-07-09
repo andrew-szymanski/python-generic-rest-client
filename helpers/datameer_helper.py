@@ -16,10 +16,8 @@ from simplejson import load, loads, dumps
 
 # constants
 LOG_INDENT = "  "        # to prettify logs
-# keys in cfg file
-URI = "root_url"
-USER_ID="user_id"
-USER_PASSWORD_FILE="user_password_file"
+# keys in cfg file / env variables
+CONFIG_KEYS = ("DATAMEER_URI", "DATAMEER_USER", "DATAMEER_PASSWORD")
 
 # restkit
 # http://restkit.readthedocs.io/en/latest/api/client.html
@@ -44,6 +42,8 @@ class DatameerClient(object):
       
       # initialize variables - so all are listed here for convenience
       self.dict_config = {}    # config params
+      for config_key in CONFIG_KEYS:
+         self.dict_config[config_key] = None
 
    def configure(self, config_file):
       """ grab and validate config
@@ -62,9 +62,9 @@ class DatameerClient(object):
       self.configure(config_file)
 
       # root url
-      uri_root = self.dict_config[URI]
+      uri_root = self.dict_config[DATAMEER_URI]
       # authentication
-      auth = BasicAuth(self.dict_config[USER_ID], self.__get_password__())
+      auth = BasicAuth(self.dict_config[DATAMEER_USER], self.dict_config[DATAMEER_PASSWORD])
       # list all jobs
       uri = uri_root + "/export-job"
       resource = Resource(uri,filters=[auth])
@@ -85,7 +85,7 @@ class DatameerClient(object):
 
       self.logger.debug("%s reading config file: [%s]..." % (LOG_INDENT, config_file))
       
-      new_dict = {}
+
       # read config file
       try:
             with open(config_file) as f:
@@ -98,34 +98,50 @@ class DatameerClient(object):
                   (key, val) = line.split('=')
                   key = key.strip()
                   val = val.strip()
-                  new_dict[key] = val
+                  self.dict_config[key] = val
       except Exception, e:
             raise Exception("Could not read config file: [%s], error: [%s]" % (config_file, e))
+
+      # and check if env vars with the same name exist - and overwrite values from file if they do
+      for key in CONFIG_KEYS:
+         value = os.getenv(key, None)
+         if value:
+            self.logger.debug("%s env var [%s] found so its value will be used instead" % (LOG_INDENT, key))
+            self.dict_config[key] = value
+
+      # determine whether password is literal or password file (in which case get its content)
+      password = self.__get_password__()
+      self.dict_config["DATAMEER_PASSWORD"] = password
+
          
+
       # validate all params
-      keys = [URI,USER_ID,USER_PASSWORD_FILE]
-      for key in keys:
-            value = new_dict.get(key, None)
-            if not value:
-               raise Exception("'%s' not defined in config file: [%s]" % (key, config_file))
-      
-      self.dict_config = new_dict
-      self.logger.info("%s %s: [%s]" % (LOG_INDENT, URI, self.dict_config[URI]))
-      self.logger.info("%s %s: [%s]" % (LOG_INDENT, USER_ID, self.dict_config[USER_ID]))               
+      for key in CONFIG_KEYS:
+            value = self.dict_config.get(key, None)
+            if value:
+               raise Exception("mandatory value for [%s] not defined in config file or as env variable in config file: [%s]" % (key, config_file))
+
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, URI, self.dict_config["DATAMEER_URI"]))
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, USER_ID, self.dict_config["DATAMEER_USER"]))               
   
    def __get_password__(self):     
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
-      # read password file
-      password_file = self.dict_config[USER_PASSWORD_FILE]
+      # check if value is a password file or not
+      password_value = self.dict_config["DATAMEER_PASSWORD"]
       password = None
       try:
-            with open(password_file) as f:
+            with open(password_value) as f:
                password=f.read()
+               # we managed to read the file - so grab password
+               password = password.replace('\n','')
+               password = password.rstrip()
+               self.logger.debug("%s password read in from: [%s]" % (LOG_INDENT, "DATAMEER_PASSWORD"))
+               return password
       except Exception, e:
-            raise Exception("Could not read password file: [%s], error: [%s]" % (password_file, e))
-      password = password.replace('\n','')
-      password = password.rstrip()
-      return password   
+            pass
+
+      password = password_value
+      return password
 
 
 
