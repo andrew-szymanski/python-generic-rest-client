@@ -1,11 +1,12 @@
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='python-rest-clients',
     version='0.1',
     author='Andrew Szymanski',
     author_email='',
-    packages=['cli'],
+    packages=find_packages(),
     scripts=['cli/cli.py',],
     url='https://github.com/andrew-szymanski/python-rest-clients',
     license='LICENSE.txt',
