@@ -10,6 +10,7 @@ import logging
 import os
 import inspect
 import imp
+import traceback
 
 # import helpers.cdh_aws_helper
 # import /home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper.py
@@ -96,12 +97,18 @@ class Helper_Manager(object):
       self.logger.debug("  module: [%s], class: [%s]" % (module_full_path,class_name))
       
       # import module
-      helper_module_imported = importFromURI(module_full_path)
-      if not helper_module_imported:
-         raise Exception("ERROR: Failed to dynamically load module [%s], error: [%s]" % (module_full_path,e))
+      try:
+        helper_module_imported = importFromURI(module_full_path)
+      except Exception as caughtException:  
+         raise Exception("ERROR: Failed to dynamically load module [%s], error: [%s]" % (module_full_path,caughtException))
  
       # and import class
-      my_class = getattr(helper_module_imported, class_name)
+      try: 
+        my_class = getattr(helper_module_imported, class_name)
+      except Exception as caughtException:    
+        raise Exception("ERROR: Failed to dynamically load class [%s], error: [%s]" % (class_name,caughtException))
+
+
       return my_class
       #d = class_name.rfind(".")
       #classname = class_name[d+1:len(class_name)]
@@ -128,9 +135,10 @@ def mainRun(opts, parser):
     try:
         # execute specified class method
         mngr.execute(**opts.__dict__)   
-    except Exception, e:
-        logger.error("%s" % e)
+    except Exception as caughtException:
         parser.print_help()
+        print "ERROR: [%s]%s" % (caughtException,'\n')
+        traceback.print_stack()
         sys.exit(1)
     
 
@@ -170,7 +178,7 @@ def main(argv=None):
 
     try:
         mainRun(opts, parser)
-    except Exception, e:
+    except Exception as e:
         sys.exit("ERROR: [%s]" % e)
 
 
@@ -178,5 +186,5 @@ if __name__ == "__main__":
     logger.info("__main__ starting...")
     try:
         main()
-    except Exception, e:
+    except Exception as e:
         sys.exit("ERROR: [%s]" % e)    
