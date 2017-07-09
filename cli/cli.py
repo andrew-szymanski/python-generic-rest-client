@@ -138,7 +138,7 @@ def mainRun(opts, parser):
     except Exception as caughtException:
         parser.print_help()
         print "ERROR: [%s]%s" % (caughtException,'\n')
-        traceback.print_stack()
+        #traceback.print_stack()
         sys.exit(1)
     
 
