@@ -16,8 +16,12 @@ from simplejson import load, loads, dumps
 
 # constants
 LOG_INDENT = "  "        # to prettify logs
+# constants for config keys
+CONFIG_URI_ROOT="DATAMEER_URI"
+CONFIG_USER_ID="DATAMEER_USER"
+CONFIG_USER_PASSWORD="DATAMEER_PASSWORD"
 # keys in cfg file / env variables
-CONFIG_KEYS = ("DATAMEER_URI", "DATAMEER_USER", "DATAMEER_PASSWORD")
+CONFIG_KEYS = (CONFIG_URI_ROOT, CONFIG_USER_ID, CONFIG_USER_PASSWORD)
 
 # restkit
 # http://restkit.readthedocs.io/en/latest/api/client.html
@@ -64,7 +68,7 @@ class DatameerClient(object):
       # root url
       uri_root = self.dict_config[DATAMEER_URI]
       # authentication
-      auth = BasicAuth(self.dict_config[DATAMEER_USER], self.dict_config[DATAMEER_PASSWORD])
+      auth = BasicAuth(self.dict_config[CONFIG_USER_ID], self.dict_config[CONFIG_USER_PASSWORD])
       # list all jobs
       uri = uri_root + "/export-job"
       resource = Resource(uri,filters=[auth])
@@ -99,6 +103,7 @@ class DatameerClient(object):
                   key = key.strip()
                   val = val.strip()
                   self.dict_config[key] = val
+                  self.logger.debug("%s [%s] = [%s]" % (LOG_INDENT, key, val))
       except Exception, e:
             raise Exception("Could not read config file: [%s], error: [%s]" % (config_file, e))
 
@@ -106,28 +111,26 @@ class DatameerClient(object):
       for key in CONFIG_KEYS:
          value = os.getenv(key, None)
          if value:
-            self.logger.debug("%s env var [%s] found so its value will be used instead" % (LOG_INDENT, key))
+            self.logger.debug("%s env var [%s] found so it will be used instead, overridng value in conf file" % (LOG_INDENT, key))
             self.dict_config[key] = value
 
       # determine whether password is literal or password file (in which case get its content)
       password = self.__get_password__()
-      self.dict_config["DATAMEER_PASSWORD"] = password
-
-         
+      self.dict_config[CONFIG_USER_PASSWORD] = password
 
       # validate all params
       for key in CONFIG_KEYS:
             value = self.dict_config.get(key, None)
-            if value:
-               raise Exception("mandatory value for [%s] not defined in config file or as env variable in config file: [%s]" % (key, config_file))
+            if not value:
+               raise Exception("mandatory value for [%s] not defined in config file [%s] or as env variable. " % (key, config_file))
 
-      self.logger.info("%s %s: [%s]" % (LOG_INDENT, URI, self.dict_config["DATAMEER_URI"]))
-      self.logger.info("%s %s: [%s]" % (LOG_INDENT, USER_ID, self.dict_config["DATAMEER_USER"]))               
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_URI_ROOT, self.dict_config[CONFIG_URI_ROOT]))
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_USER_ID, self.dict_config[CONFIG_USER_ID]))               
   
    def __get_password__(self):     
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
       # check if value is a password file or not
-      password_value = self.dict_config["DATAMEER_PASSWORD"]
+      password_value = self.dict_config[CONFIG_USER_PASSWORD]
       password = None
       try:
             with open(password_value) as f:
@@ -135,7 +138,7 @@ class DatameerClient(object):
                # we managed to read the file - so grab password
                password = password.replace('\n','')
                password = password.rstrip()
-               self.logger.debug("%s password read in from: [%s]" % (LOG_INDENT, "DATAMEER_PASSWORD"))
+               self.logger.debug("%s password read in from: [%s]" % (LOG_INDENT, CONFIG_USER_PASSWORD))
                return password
       except Exception, e:
             pass
