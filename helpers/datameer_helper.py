@@ -66,7 +66,7 @@ class DatameerClient(object):
       self.configure(config_file)
 
       # root url
-      uri_root = self.dict_config[DATAMEER_URI]
+      uri_root = self.dict_config[CONFIG_URI_ROOT]
       # authentication
       auth = BasicAuth(self.dict_config[CONFIG_USER_ID], self.dict_config[CONFIG_USER_PASSWORD])
       # list all jobs
@@ -103,7 +103,6 @@ class DatameerClient(object):
                   key = key.strip()
                   val = val.strip()
                   self.dict_config[key] = val
-                  self.logger.debug("%s [%s] = [%s]" % (LOG_INDENT, key, val))
       except Exception, e:
             raise Exception("Could not read config file: [%s], error: [%s]" % (config_file, e))
 
@@ -128,7 +127,7 @@ class DatameerClient(object):
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_USER_ID, self.dict_config[CONFIG_USER_ID]))               
   
    def __get_password__(self):     
-      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
+      self.logger.debug("%s %s::%s starting..." %  (LOG_INDENT,self.__class__.__name__ , inspect.stack()[0][3]))
       # check if value is a password file or not
       password_value = self.dict_config[CONFIG_USER_PASSWORD]
       password = None
@@ -138,11 +137,12 @@ class DatameerClient(object):
                # we managed to read the file - so grab password
                password = password.replace('\n','')
                password = password.rstrip()
-               self.logger.debug("%s password read in from: [%s]" % (LOG_INDENT, CONFIG_USER_PASSWORD))
+               self.logger.debug("%s %s password read in from: [%s]" % (LOG_INDENT, LOG_INDENT, CONFIG_USER_PASSWORD))
                return password
       except Exception, e:
             pass
 
+      self.logger.debug("%s %s password taken as literal value" % (LOG_INDENT, LOG_INDENT))
       password = password_value
       return password
 
