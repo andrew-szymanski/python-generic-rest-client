@@ -6,6 +6,7 @@ __version__ = "0.1.0"
 
 
 import logging
+import logging.handlers
 import os
 import inspect
 import time
@@ -25,8 +26,9 @@ CONFIG_USER_PASSWORD="DATAMEER_PASSWORD"
 CONFIG_EXPORT_FILE="DATAMEER_EXPORT_FILE"
 CONFIG_EXPORT_DIR="DATAMEER_EXPORT_DIR"
 CONFIG_EXPORTABLES_FOLDER="DATAMEER_EXPORTABLES_FOLDER"
+CONFIG_EVENTS_LOG_DIR="DATAMEER_EVENTS_LOG_DIR"
 # keys in cfg file / env variables
-CONFIG_FILE_KEYS = [CONFIG_URI_ROOT, CONFIG_USER_ID, CONFIG_USER_PASSWORD,CONFIG_EXPORT_FILE,CONFIG_EXPORT_DIR,CONFIG_EXPORTABLES_FOLDER]
+CONFIG_FILE_KEYS = [CONFIG_URI_ROOT, CONFIG_USER_ID, CONFIG_USER_PASSWORD,CONFIG_EXPORT_FILE,CONFIG_EXPORT_DIR,CONFIG_EXPORTABLES_FOLDER,CONFIG_EVENTS_LOG_DIR]
 
 # constants for derived config keys  
 CONFIG_APP_ROOT_DIR="APP_ROOT_DIR"
@@ -97,6 +99,20 @@ class DatameerClient(object):
       # a dictionary of artifacts we specified in artifacts_to_export.list.txt:
       #  key = artifact name, value = 'action' (UPDATE or DELETE)
       self.artifacts_from_list_file_dict = None
+      # event logger (to a file)
+      log_filename = "%s/datameer-export.log" % (self.dict_config[CONFIG_EVENTS_LOG_DIR])
+      self.logger.debug("%s event log file = [%s]" % (LOG_INDENT,log_filename))
+      self.event_logger = logging.getLogger('EventLogger')
+      self.event_logger.setLevel(logging.INFO)
+      handler = logging.handlers.RotatingFileHandler(log_filename, backupCount=50)
+      handler.doRollover()
+      self.event_logger.addHandler(handler)
+      self.event_logger.info("Event logging started...")
+
+
+# Add the log message handler to the logger
+
+              
 
    def export_artifacts(self, args, kwargs):
       """ Main method for job export
@@ -128,6 +144,35 @@ class DatameerClient(object):
       # write out artifacts in json so we can import them
       self.__write_out_artifacts__()
 
+   def import_artifacts(self, args, kwargs):
+      """ Main method for job export
+      """
+      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
+      config_file = kwargs.get('cfg',"")
+      if not config_file:
+         raise Exception("you must specify config file!")
+
+      self.configure(config_file)
+
+      # read in artifacts to export - into dictionary - key is an artifact name, value is an "action"
+      self.artifacts_from_list_file_dict = self.__read_export_list__(self.dict_config[CONFIG_EXPORT_FILE])
+      if not self.artifacts_from_list_file_dict:
+         raise Exception("Could not find any artifacts to export in file: [%s]" % (self.dict_config[CONFIG_EXPORT_FILE]))
+
+      self.logger.warn("UNDER CONSTRUCTION - exiting here!")
+      exit(0)
+
+      # get list of all exportable artifacts in datameer
+      self.all_exportable_artifacts_dict = self.get_artifacts()
+      count_total = 0
+      for key in self.all_exportable_artifacts_dict:
+         count_total = count_total + len(self.all_exportable_artifacts_dict[key])
+      self.logger.info("%s total exportable artifacts found: [%s]..." % (LOG_INDENT, count_total))
+
+
+      # get articacts to export - again, dict, key is artifact type, value is a list of artifacts for that type
+      self.logger.info("%s selecting artifacts specified in [%s] file..." % (LOG_INDENT, self.dict_config[CONFIG_EXPORT_FILE]))
+      self.artifacts_to_export_json_dict = self.__get_artifacts_to_export__(self.artifacts_from_list_file_dict)
 
    def get_artifacts(self):
       """ Get a list of all artifacts, i.e  import jobs, export jobs and workbooks,
@@ -289,7 +334,10 @@ class DatameerClient(object):
       for key in CONFIG_FILE_KEYS:
          value = os.getenv(key, None)
          if value:
-            self.logger.debug("%s env var [%s] found so it will be used instead, overridng value in conf file" % (LOG_INDENT, key))
+            if key == CONFIG_USER_PASSWORD:
+               self.logger.debug("%s env var [%s] found so it will be used instead, overridng value in conf file" % (LOG_INDENT, key))
+            else:
+               self.logger.debug("%s env var [%s]=[%s] found so it will be used instead, overridng value in conf file" % (LOG_INDENT, key, value))
             self.dict_config[key] = value
 
       # determine whether password is literal or password file (in which case get its content)
@@ -307,6 +355,7 @@ class DatameerClient(object):
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORT_FILE, self.dict_config[CONFIG_EXPORT_FILE]))               
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORT_DIR, self.dict_config[CONFIG_EXPORT_DIR]))
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORTABLES_FOLDER, self.dict_config[CONFIG_EXPORTABLES_FOLDER]))      
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EVENTS_LOG_DIR, self.dict_config[CONFIG_EVENTS_LOG_DIR]))
 
       # self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_USER_PASSWORD, self.dict_config[CONFIG_USER_PASSWORD]))                    
   
