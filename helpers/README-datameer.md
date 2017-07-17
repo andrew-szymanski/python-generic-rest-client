@@ -6,7 +6,7 @@ Wrapper for Datameer REST APIs, currently focusing on export / import of artifac
 
 Config file
 ==============
-See [cli/datameer_client.cfg](../master/helpers/README-datameer.md) for more info
+See [cli/datameer_client.cfg](../cli/datameer_client.cfg) for more info
 
 
 Usage examples
