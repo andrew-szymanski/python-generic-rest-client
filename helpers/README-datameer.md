@@ -1,43 +1,12 @@
-python-rest-clients
+datameer-rest-client
 =============
 
-Collection of python REST clients for PoCs.  The idea is that they are all in the same repo, share the same cli and each client is just an additional py module.  This is just for quick turn around PoCs.
-
-UNDER CONSTRUCTION
-
-run from source
-=============
-* checkout the code (say to path "$mycode")
-* export PYTHONPATH=$mycode
-* cd $mycode
-* cli/cli.py
-
-example:
-```shell
-export PYTHONPATH=~/data/code/github/python-rest-clients
-cd ~/data/code/github/python-rest-clients
-./cli/cli.py 
-```
-
-
-install from source
-=============
-instructions below purely as a guidelines - you may need to adjust for your case
-```shell
-git clone https://github.com/andrew-szymanski/python-rest-clients.git
-virtualenv -p /usr/bin/python python-rest-clients
-source python-rest-clients/bin/activate
-cd python-rest-clients
-pip install -e .
-# use
-# then deactivate virtualenv 
-deactivate
-
-```
+Wrapper for Datameer REST APIs, currently focusing on export / import of artifacts (jobs etc)
 
 
 Config file
 ==============
+See [cli/datameer_client.cfg](../master/helpers/README-datameer.md) for more info
 
 
 Usage examples
