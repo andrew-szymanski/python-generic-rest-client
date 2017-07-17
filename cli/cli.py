@@ -12,16 +12,14 @@ import inspect
 import imp
 import traceback
 
-# import helpers.cdh_aws_helper
-# import /home/madpole/data/code/github/python-generic-rest-client/helpers/boto_helper.py
-
 
 LOG_INDENT = "  "
+logger = logging.getLogger("datameer-rest-client")
 console = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s: %(levelname)-8s %(message)s',"%Y-%m-%d %H:%M:%S")
 console.setFormatter(formatter)
-logging.getLogger(__name__).addHandler(console)
-logger = logging.getLogger(__name__)
+logger.addHandler(console)
+logger.setLevel(logging.DEBUG)     # default, this will be reset later
 
 def importFromURI(uri):
    """ import module
@@ -154,6 +152,7 @@ def mainRun(opts, parser):
 # alias d='cli/cli.py -d Y -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg';alias a='cli/cli.py  -c $HOME/.passwords/cdh-manager.cip.prod.eu-west-1.cfg'
 # 
 # ./cli/cli.py -d true -c $HOME/data/configs/service-discovery-client.cfg -x helpers/service_discovery_helper.ServiceDiscoveryClient.register -j $HOME/data/configs/service_discovery.register.example.json
+# ./cli/cli.py -d Y -x helpers/datameer_helper.DatameerClient.export_artifacts -c ./cli/datameer_client.cfg
 
 def main(argv=None):
     from optparse import OptionParser, OptionGroup
