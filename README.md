@@ -5,7 +5,8 @@ Collection of python REST clients for PoCs.  The idea is that they are all in th
 
 UNDER CONSTRUCTION
 
-[README - datameer](../blob/master/helpers/README-datameer.md)
+[README - datameer](../master/helpers/README-datameer.md)
+https://github.com/andrew-szymanski/python-rest-clients/blob/blob/master/helpers/README-datameer.md
 
 run from source
 =============
