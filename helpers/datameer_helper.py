@@ -24,8 +24,9 @@ CONFIG_USER_ID="DATAMEER_USER"
 CONFIG_USER_PASSWORD="DATAMEER_PASSWORD"
 CONFIG_EXPORT_FILE="DATAMEER_EXPORT_FILE"
 CONFIG_EXPORT_DIR="DATAMEER_EXPORT_DIR"
+CONFIG_EXPORTABLES_FOLDER="DATAMEER_EXPORTABLES_FOLDER"
 # keys in cfg file / env variables
-CONFIG_FILE_KEYS = [CONFIG_URI_ROOT, CONFIG_USER_ID, CONFIG_USER_PASSWORD,CONFIG_EXPORT_FILE,CONFIG_EXPORT_DIR]
+CONFIG_FILE_KEYS = [CONFIG_URI_ROOT, CONFIG_USER_ID, CONFIG_USER_PASSWORD,CONFIG_EXPORT_FILE,CONFIG_EXPORT_DIR,CONFIG_EXPORTABLES_FOLDER]
 
 # constants for derived config keys  
 CONFIG_APP_ROOT_DIR="APP_ROOT_DIR"
@@ -35,10 +36,6 @@ CONFIG_APP_KEYS = [CONFIG_APP_ROOT_DIR]
 # ARTIFACTS types to export - please note that this value is used to build API url
 # so has to be exact as per API documentation (without slash)
 ARTIFACTS_TYPES = ['import-job','workbook','export-job']
-
-# path to exportable artifacts - only artifacts in this folder (or its subfolders)
-# will be exported
-EXPORTABLES_FOLDER = "/kindred-pipelines"
 
 # artifact export output filename prefix
 EXPORT_FILENAME_PREFIX = "datameer-export"
@@ -134,7 +131,7 @@ class DatameerClient(object):
 
    def get_artifacts(self):
       """ Get a list of all artifacts, i.e  import jobs, export jobs and workbooks,
-      but only if they are in EXPORTABLES_FOLDER or its subfolders
+      but only if they are in CONFIG_EXPORTABLES_FOLDER or its subfolders
       """ 
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
 
@@ -150,27 +147,26 @@ class DatameerClient(object):
       for artifact_url in ARTIFACTS_TYPES:
          uri = "%s/%s" % (uri_root,artifact_url)
          resource = Resource(uri,filters=[auth])
-         self.logger.debug("%s getting artifacts of [%s]..." % (LOG_INDENT, artifact_url)) 
+         self.logger.debug("%s getting artifacts of [%s] (%s)..." % (LOG_INDENT, artifact_url, uri)) 
          timestamp = time.strftime("%m-%m-%d %H:%M")
          response = resource.get(headers={'Content-Type': 'application/json'})
          result_str = response.body_string()
          result_list = loads(result_str)
          clean_list = []
          
-         # exclude all artifacts which are not in EXPORTABLES_FOLDER
+         # exclude all artifacts which are not in CONFIG_EXPORTABLES_FOLDER
          for artifact in result_list:
-            artifact_path = artifact['path']
-            #print "[%s] [%s] [%s]" % (artifact_path, EXPORTABLES_FOLDER, artifact_path.startswith(EXPORTABLES_FOLDER))
-            if artifact_path.startswith(EXPORTABLES_FOLDER) == False:
+           artifact_path = artifact['path']
+           if artifact_path.startswith(self.dict_config[CONFIG_EXPORTABLES_FOLDER]) == False:
                ignored_count = ignored_count + 1
                continue
-            clean_list.append(artifact)
+           clean_list.append(artifact)
          
          ret_dict[artifact_url] = clean_list
          self.logger.debug("%s %s [%s] --> [%s] artifacts loaded" % (LOG_INDENT, LOG_INDENT, artifact_url, len(ret_dict[artifact_url]))) 
 
       if ignored_count > 0:
-         self.logger.warn("[%s] artifacts were ignored because they weren't in [%s] folder" % (ignored_count, EXPORTABLES_FOLDER))
+         self.logger.warn("[%s] artifacts were ignored because they weren't in [%s] folder" % (ignored_count, self.dict_config[CONFIG_EXPORTABLES_FOLDER]))
  
       return ret_dict
 
@@ -309,7 +305,10 @@ class DatameerClient(object):
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_URI_ROOT, self.dict_config[CONFIG_URI_ROOT]))
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_USER_ID, self.dict_config[CONFIG_USER_ID]))               
       self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORT_FILE, self.dict_config[CONFIG_EXPORT_FILE]))               
-      self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORT_DIR, self.dict_config[CONFIG_EXPORT_DIR]))               
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORT_DIR, self.dict_config[CONFIG_EXPORT_DIR]))
+      self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_EXPORTABLES_FOLDER, self.dict_config[CONFIG_EXPORTABLES_FOLDER]))      
+
+      # self.logger.info("%s %s: [%s]" % (LOG_INDENT, CONFIG_USER_PASSWORD, self.dict_config[CONFIG_USER_PASSWORD]))                    
   
    def __get_password__(self):     
       self.logger.debug("%s %s::%s starting..." %  (LOG_INDENT,self.__class__.__name__ , inspect.stack()[0][3]))
