@@ -66,9 +66,14 @@ log "sourcing [${ENV_FILE}] file..."
 . ${ENV_FILE}
 log "sourcing [${ENV_FILE}] DONE"
 
+#                      *************************
+#                      **** additional env vars
+#                      *************************
+DATAMEER_EVENTS_LOG_DIR=${COMPONENT_DIR}/log
+export DATAMEER_EVENTS_LOG_DIR=${DATAMEER_EVENTS_LOG_DIR}
 
 # validate env vars set
-ENV_VARIABLES="DATAMEER_USER DATAMEER_PASSWORD VIRTUAL_ENV_DIR"
+ENV_VARIABLES="DATAMEER_USER DATAMEER_PASSWORD DATAMEER_EVENTS_LOG_DIR VIRTUAL_ENV_DIR"
 ERROR=0
 for ENV_VAR in ${ENV_VARIABLES}; do
    VALUE=${!ENV_VAR}

@@ -99,6 +99,8 @@ class DatameerClient(object):
       # a dictionary of artifacts we specified in artifacts_to_export.list.txt:
       #  key = artifact name, value = 'action' (UPDATE or DELETE)
       self.artifacts_from_list_file_dict = None
+      #  key = artifact name, value = tuple (json as string, json as dict)
+      self.artifacts_imported_from_file = None
       # event logger (to a file)
       log_filename = "%s/datameer-export.log" % (self.dict_config[CONFIG_EVENTS_LOG_DIR])
       self.logger.debug("%s event log file = [%s]" % (LOG_INDENT,log_filename))
@@ -154,25 +156,158 @@ class DatameerClient(object):
 
       self.configure(config_file)
 
-      # read in artifacts to export - into dictionary - key is an artifact name, value is an "action"
+      # read in artifacts to export / import - into dictionary - key is an artifact name, value is an "action"
       self.artifacts_from_list_file_dict = self.__read_export_list__(self.dict_config[CONFIG_EXPORT_FILE])
       if not self.artifacts_from_list_file_dict:
          raise Exception("Could not find any artifacts to export in file: [%s]" % (self.dict_config[CONFIG_EXPORT_FILE]))
 
-      self.logger.warn("UNDER CONSTRUCTION - exiting here!")
-      exit(0)
-
       # get list of all exportable artifacts in datameer
+      # for import this will be a list of all artifacts which can be updated
       self.all_exportable_artifacts_dict = self.get_artifacts()
       count_total = 0
       for key in self.all_exportable_artifacts_dict:
          count_total = count_total + len(self.all_exportable_artifacts_dict[key])
       self.logger.info("%s total exportable artifacts found: [%s]..." % (LOG_INDENT, count_total))
 
+      # load exported json files (so we can get more info about artifacts we want to import)
+      # we will load in dictionary: dict['artifact_type'] = list of dict['artifact_name'] = (json_string, json_dict)
+      self.artifacts_imported_from_file = self.__read_in_artifacts__()
 
-      # get articacts to export - again, dict, key is artifact type, value is a list of artifacts for that type
-      self.logger.info("%s selecting artifacts specified in [%s] file..." % (LOG_INDENT, self.dict_config[CONFIG_EXPORT_FILE]))
-      self.artifacts_to_export_json_dict = self.__get_artifacts_to_export__(self.artifacts_from_list_file_dict)
+      # now we have everything to import artifacts
+      self.execute_rest_import()
+
+
+   def execute_rest_import(self):
+      """ execute REST commands to import / delete artifacts
+      """
+      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
+
+      # loop through artifact types - order is CRITICAL
+      for ordered_artifact_type in ARTIFACTS_TYPES:
+         self.logger.info("Starting to import artifacts of type: [%s]" % (ordered_artifact_type))
+         # loop through the list of those artifacts
+         for artifact_list_item in self.artifacts_imported_from_file[ordered_artifact_type]:
+            for artifact_name in artifact_list_item:
+               self.logger.info("%s starting import of [%s]" % (LOG_INDENT, artifact_name))
+               artifact_action = self.artifacts_from_list_file_dict[artifact_name]
+               # UPDATE or DELETE
+               if artifact_action == "UPDATE":
+                  self.execute_rest_import_update(artifact_name, ordered_artifact_type)
+               elif artifact_action == "DELETE":
+                  self.execute_rest_import_delete(artifact_name, ordered_artifact_type)
+               else:
+                  raise Exception("artifact [%s], action: [%s] invalid, valid actions: UPDATE or DELETE" % (artifact_name, artifact_action))
+
+      # for listed_artifact in self.artifacts_from_list_file_dict:
+      #    self.logger.info("preparing to process [%s], action: [%s]" % (listed_artifact, self.artifacts_from_list_file_dict[listed_artifact]))
+
+   def execute_rest_import_update(self,artifact_name,ordered_artifact_type):
+      """ execute REST commands to import / delete artifacts
+      """
+      self.logger.debug("%s %s::%s starting..." %  (LOG_INDENT, self.__class__.__name__ , inspect.stack()[0][3]))
+      # root url
+      uri_root = self.dict_config[CONFIG_URI_ROOT]
+      # authentication
+      auth = BasicAuth(self.dict_config[CONFIG_USER_ID], self.dict_config[CONFIG_USER_PASSWORD])
+
+
+
+      # check if the artifact exists already and get its id if it does
+      artifact_id = ""
+      exportable_artifact_dict = {}
+      exportable_artifacts_list = self.all_exportable_artifacts_dict.get(ordered_artifact_type, None)
+      if exportable_artifacts_list:
+         for exportable_artifact_dict in exportable_artifacts_list:
+            if exportable_artifact_dict['name'] == artifact_name:
+               artifact_id = exportable_artifact_dict['id']
+               break
+
+      uri = "%s/%s/%s" % (uri_root,ordered_artifact_type,artifact_id)
+      self.logger.debug("%s UPDATE url: [%s]" % (LOG_INDENT, uri))
+
+      # get json
+      artifact_json = None
+      artifacts_list = self.artifacts_imported_from_file.get(ordered_artifact_type, None)
+      if not artifacts_list:
+         raise Exception("atrifact list for artifact: [%s], type: [%s] NOT FOUND!! Something code logic has gone wrong coz we loaded it previously!!" % (artifact_name,ordered_artifact_type))
+
+      artifact_json_dict = None
+      for artifact_json_dict in artifacts_list:
+         if len(exportable_artifact_dict) > 0 and exportable_artifact_dict['name'] == artifact_name:
+               break  
+      if not artifact_json_dict:
+         raise Exception("loaded dict for artifact: [%s], type: [%s] NOT FOUND!! Something code logic has gone wrong coz we loaded it previously!!" % (artifact_name,ordered_artifact_type))
+
+
+      artifact_json = artifact_json_dict[artifact_name][0]
+      artifact_dict = artifact_json_dict[artifact_name][1]
+      
+      # get description so we can update it - but ignore errors
+      description = ""
+      try:
+         description = artifact_dict.get('file').get('description')
+      except Exception as e:
+         pass
+      #print description
+      new_description = self.update_description(description)
+      #print new_description
+
+      # set new description - ignore errors
+      artifact_dict['file']['description'] = new_description
+
+
+      # and finally execute REST call
+      resource = Resource(uri,filters=[auth]) 
+      response = None
+      if artifact_id == "":
+         self.logger.debug("%s about to POST url: [%s]" % (LOG_INDENT, uri))
+         response = resource.post(payload=dumps(artifact_dict), headers={'Content-Type': 'application/json'})
+      else:
+         self.logger.debug("%s about to PUT url: [%s]" % (LOG_INDENT, uri))
+         response = resource.put(payload=dumps(artifact_dict), headers={'Content-Type': 'application/json'})
+
+      dict_response_body = loads(response.body_string())
+      response_status_text = dict_response_body['status']
+      if response_status_text == "success":
+         self.logger.info("%s [%s]/[%s] has been updated successfully" % (LOG_INDENT, artifact_name,ordered_artifact_type))
+      else:
+         self.logger.warn("[%s]/[%s], update returned status: [%s]" % (artifact_name,ordered_artifact_type,response_status_text))
+
+
+   def execute_rest_import_delete(self,artifact_name,ordered_artifact_type):
+      """ execute REST commands to import / delete artifacts
+      """
+      self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
+      # root url
+      uri_root = self.dict_config[CONFIG_URI_ROOT]
+      # authentication
+      auth = BasicAuth(self.dict_config[CONFIG_USER_ID], self.dict_config[CONFIG_USER_PASSWORD])
+      self.logger.warn("DELETE not implemented yet")
+
+   def update_description(self,description):
+      """ Micky Mouse job of replacing comment with latest update info
+      convention: update info is between "####"
+      """
+      # no time for making this lovely so just return original description for a time being
+      return description
+
+      # self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
+      # delimiter = "####"
+      # update_comment = ""
+      # count = description.count(delimiter)
+      # timestamp = time.strftime("%m-%m-%d %H:%M")
+      # update_comment = "%s %s %s %s" % (delimiter, "UPDATED BY Datameer REST Client on:", timestamp, delimiter)
+      # ret_description = ""
+      # if count != 2:
+      #    # update comment not inserted (first time around)
+      #    ret_description = "%s%s%s" % (description, "\n------------------------\n", update_comment)
+      # else:
+      #    pos1 = description.find(delimiter)
+      #    pos2 = description.find(delimiter,pos1)
+      #    ret_description = description[:pos1] + update_comment + description[pos2:]
+
+
+      # return ret_description
 
    def get_artifacts(self):
       """ Get a list of all artifacts, i.e  import jobs, export jobs and workbooks,
@@ -216,7 +351,7 @@ class DatameerClient(object):
       return ret_dict
 
    def __get_artifacts_to_export__(self, artifacts_name_dict):
-      """ extract artifacts we actually want to export
+      """ extract artifacts we actually want to export 
       artifacts_name_list is dictionary, key is an artifact name, value is an "action"
       """ 
       self.logger.debug("%s::%s starting..." %  (self.__class__.__name__ , inspect.stack()[0][3]))
@@ -249,6 +384,47 @@ class DatameerClient(object):
       # finished all loops
       return result_dict
 
+   def __read_in_artifacts__(self):
+      """ read in artifacts from json files:
+      dict['artifact_type'] = list of dict['artifact_name'] = (json_string, json_dict)
+      """ 
+
+      # initialise return object - dictionary of lists of dictionaries
+      ret_dict = {}
+      for defined_artifact_type in ARTIFACTS_TYPES:
+         # for each artifact type declare list
+         ret_dict[defined_artifact_type] = []
+
+
+      for artifact_name in self.artifacts_from_list_file_dict:
+         json_string = ""
+         json_dict = None
+         glob_pattern = "%s/datameer-export*.%s.json" % (self.dict_config[CONFIG_EXPORT_DIR], artifact_name)
+         glob_list = glob.glob(glob_pattern)
+         if len(glob_list) != 1:
+            raise Exception("file search [%s] returned files [%s] instead of 1" % (glob_pattern, len(glob_list)))
+         filename = glob_list[0]
+         self.logger.debug("%s reading in json file: [%s]" % (LOG_INDENT, filename))
+         with open(glob_list[0]) as f:
+            json_string = f.read()
+            # print json_string
+         # load json as dictionary as well
+         json_dict = loads(json_string)
+         # work out artifact type (from filename)
+         filename_elements = filename.split(".")
+         artifact_type = filename_elements[1]
+         # validate it is valid artifact type
+         if artifact_type not in ret_dict:
+            raise Exception("Invalid artifact type: [%s], derived from filename: [%s]" % (artifact_type, filename))
+
+         # create dictionary for this artifact
+         artifact_dict = {}
+         artifact_dict[artifact_name] = (json_string, json_dict)
+         # add to the appriopriate list
+         ret_dict[artifact_type].append(artifact_dict)
+
+
+      return ret_dict
 
 
    def __write_out_artifacts__(self):
@@ -290,15 +466,15 @@ class DatameerClient(object):
 
             # and now write out
             now = datetime.now()
-            timestamp = now.strftime("%y-%m-%d.%H%M.%f")
+            timestamp = now.strftime("%y-%m-%d.%H-%M.%f")
             output_filename = "%s/%s.%s.%s.%s.%s.%s.json" % (
                self.dict_config[CONFIG_EXPORT_DIR],
                EXPORT_FILENAME_PREFIX,
                artifact_type,
                artifact_action,
-               artifact_name,
                artifact_uuid,
-               timestamp)
+               timestamp,
+               artifact_name)
             with open(output_filename, "w") as text_file:
                text_file.write(artifact_json)
             self.logger.debug("%s %s [%s] done" % (LOG_INDENT,LOG_INDENT,output_filename))
